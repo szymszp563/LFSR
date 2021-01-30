@@ -11,7 +11,7 @@ public class Population {
             totalSeqLength += individual.max_seq;
         }
         for (Individual individual : lfsr){
-            individual.fitness=individual.max_seq/this.fitness;
+            individual.fitness=(float)individual.max_seq/this.totalSeqLength;
         }
     }
 }
