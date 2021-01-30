@@ -1,5 +1,8 @@
 package us.edu.pl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import static java.lang.Math.pow;
@@ -10,20 +13,37 @@ public class Main {
     static int NUMBER_OF_GENERATION = 10;
     static int POP_SIZE = 10;
 
+    static List<int[]> recreateRegister(int size) {
+        List<int[]> register = new ArrayList<>();
+        for(int i = 0; i<size; i++) {
+            String[] binaryString = new StringBuilder(Integer.toBinaryString(i)).reverse().toString().split("");
+            int[] binary = new int[LFSR_LENGTH];
+            for(int j = 0; j < binary.length; j++) {
+                if(j < binaryString.length) {
+                    binary[j] = Integer.valueOf(binaryString[j]);
+                } else {
+                    break;
+                }
+            }
+            register.add(binary);
+        }
+        return register;
+    }
+
     static void printMatrix(int[][] matrix) {
         System.out.println("\n");
         for (int i = 0; i < LFSR_LENGTH; i++) {
             for (int j = 0; j < LFSR_LENGTH; j++)
-                System.out.println(matrix[i][j]);
-            System.out.println("\n");
+                System.out.print(matrix[i][j]);
+            System.out.print("\n");
         }
         return;
     }
 
     static void printState(int[] state) {
-        System.out.println("\n");
+//        System.out.print("\n");
         for (int i = 0; i < LFSR_LENGTH; i++)
-            System.out.println(state[i]);
+            System.out.print(state[i]);
         return;
     }
 
@@ -57,15 +77,17 @@ public class Main {
     }
 
     static void printRegisterSequnce(int[][] reg_seq, int index) {
+        System.out.println("Printing register sequence:");
         for (int i = 0; i < index; i++) {
             System.out.printf("[%d]->", i);
             printState(reg_seq[i]);
-            System.out.println("\n");
+            System.out.print("\n");
         }
         return;
     }
 
     static void printRegisterSequence(int index, int[][] reg_seq) {
+        System.out.println("Printing " + index + " element of register sequence:");
         System.out.printf("[%d]->", index);
         printState(reg_seq[index]);
         return;
@@ -121,24 +143,30 @@ public class Main {
             }
         }
 
+        System.out.println("Printing connection matrix");
         printMatrix(t_connection_matrix);
         //temp. verification of code
         System.out.printf("Enter first state of register...\n");
-        char[] line = new char[ LFSR_LENGTH + 1]; // the last mark in string is '\0'
+        char[] line = new char[ LFSR_LENGTH]; // the last mark in string is '\0'
         Scanner scanner = new Scanner(System.in);
-        scanner.next().getChars(0, LFSR_LENGTH + 1, line, 0);
+        scanner.next().getChars(0, LFSR_LENGTH, line, 0);
 
         for (int i = 0; i < LFSR_LENGTH; i++) {
             current_state[i] = line[i] - '0'; //in ASCI CODE '0'-48, '1'- 49
         }
 
+        System.out.println("Printing current state");
+        printState(current_state);
+        System.out.println("\nPrinting starting next state");
         printState(next_state);
         setNextState(t_connection_matrix, current_state, next_state);
         printState(next_state);
         System.out.printf("\n***");
         printState(current_state);
-        System.out.printf("\nstateToInt returned that value -> %d\n", stateToInt(current_state));
-        saveSateToRegisterSequence(current_state, register_sequence, 0);
+        System.out.printf(" -> (%d) - CURRENT STATE DECIMAL VALUE\n", stateToInt(current_state));
+        printState(next_state);
+        System.out.printf(" -> (%d) - NEXT STATE DECIMAL VALUE\n", stateToInt(next_state));
+//        saveSateToRegisterSequence(current_state, register_sequence, 0);
         saveSateToRegisterSequence(next_state, register_sequence, 0);
         printRegisterSequnce(register_sequence, 2);
         printRegisterSequence(1, register_sequence);
@@ -148,6 +176,9 @@ public class Main {
         for (int i = 0; i < LFSR_LENGTH - 1; i++) {
             chromosome[i] = 1;
         }
+        System.out.println("\nSetting chromosome:");
+        printChromosome(chromosome);
+        System.out.println("\nTo connection matrix:");
         setChromosomeToMatrix(t_connection_matrix, chromosome);
         printMatrix(t_connection_matrix);
 
@@ -158,37 +189,39 @@ public class Main {
         */
         for (int j = 0; j < POP_SIZE; j++) {
             for (int i = 0; i < LFSR_LENGTH - 1; i++)
-                chromosome[i] = (Math.random() <= 0.5) ? 1 : 2;
+                chromosome[i] = (Math.random() <= 0.5) ? 1 : 0;
             setChromosomeToMatrix(t_connection_matrix, chromosome);
+            System.out.println("Printing matrix with random chromosome:");
             printMatrix(t_connection_matrix);
         }
 
         //creating new population of POP_SIZE individuals
         Population pop = new Population();
         for(int i = 0; i < pop.lfsr.length; i++) {
-            pop.lfsr[i] = new Individual();
+            pop.lfsr[i] = new Individual();//adding chromosome to population(10 time)
         }
         float pop_fitness = 0.0f;
-        float mp = 0.03f;
-        float cp = 0.8f;
+        float mp = 0.03f;//mutation probability
+        float cp = 0.8f;//crossover probability
         //inital population
         for (int i = 0; i < POP_SIZE; i++) {
             pop.lfsr[i].fitness = 0.0f;
             pop.lfsr[i].max_seq = 0;
             pop.lfsr[i].chromosome = new int[LFSR_LENGTH - 1];
-            for (int j = 0; j < LFSR_LENGTH - 1; j++) {
-                pop.lfsr[i].chromosome[j] = (Math.random() <= 0.5) ? 1 : 2; //only 0s or 1s
+            for (int j = 0; j < LFSR_LENGTH - 1; j++) {//setting random chromosomes
+                pop.lfsr[i].chromosome[j] = (Math.random() <= 0.5) ? 1 : 0; //only 0s or 1s
             }
             printChromosome(pop.lfsr[i].chromosome);
             //chrome -> lfsr
             setChromosomeToMatrix(t_connection_matrix, pop.lfsr[i].chromosome);
+            printMatrix(t_connection_matrix);
             //transition graph from lsft with that t_connection_matrix
             //eveal fitness values from max_sequence that will be created
             //by using out lfsr with t_connection_matrix
         }
         for (int k = 0; k < NUMBER_OF_GENERATION; k++) {
         /*
-        1. check every individual from population, get sequence length
+        1. check every individual(chromosome) from population, get sequence length
         2. convert number -> length of sequence to fitness value
         3. evaluation of whole population fitness = sum of all
         individual fitness
@@ -202,6 +235,50 @@ public class Main {
         5. New individuals create new population, and we we can
         realize first point of this algorithm.
         */
+
+            System.out.println("Generation: " + k);
+            for(Individual individualChromosome : pop.lfsr) {
+                int countSeqLength = 0;
+                List<int[]> register = new ArrayList<>();
+                register = recreateRegister(size);
+                current_state = register.get(0);
+                while (true) {
+                    boolean sequenceNotFoundInRegister = true;
+                    int[] sequenceToDelete = new int[LFSR_LENGTH];
+                    for(int[] seq : register) {
+                        if(Arrays.toString(seq).equals(Arrays.toString(current_state))){
+                            sequenceNotFoundInRegister = false;
+                            sequenceToDelete = seq;
+                            break;
+                        }
+                    }
+                    if(!sequenceNotFoundInRegister) {
+                        register.remove(sequenceToDelete);
+                    } else {
+                        if(register.size() == 0) {
+                            break;
+                        } else {
+                            current_state = register.get(0);
+                            register.remove(current_state);
+                            if(individualChromosome.max_seq < countSeqLength) {
+                                individualChromosome.max_seq = countSeqLength;
+                            }
+                            countSeqLength = 0;
+                        }
+                    }
+                    setChromosomeToMatrix(t_connection_matrix, individualChromosome.chromosome);
+                    setNextState(t_connection_matrix, current_state, next_state);
+                    System.out.println("Calculation for chromosome:\n");
+                    printChromosome(individualChromosome.chromosome);
+                    printMatrix(t_connection_matrix);
+                    printState(current_state);
+                    printState(next_state);
+                    current_state = next_state;
+                    countSeqLength++;
+                }
+            }
+            System.out.println("END OF POP");
+
         }
     }
 }
