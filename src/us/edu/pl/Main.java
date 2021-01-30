@@ -277,6 +277,7 @@ public class Main {
                     countSeqLength++;
                 }
             }
+            pop.calculateTotalLengthAndFitness();
             System.out.println("END OF POP");
 
         }
