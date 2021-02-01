@@ -278,8 +278,6 @@ public class Main {
                 }
             }
             pop.calculateTotalLengthAndFitness();
-            System.out.println("END OF POP");
-
         }
     }
 }
