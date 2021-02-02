@@ -1,11 +1,19 @@
 package us.edu.pl;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 import static java.lang.Math.pow;
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
 
 public class Main {
 
@@ -112,7 +120,7 @@ public class Main {
         return;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         int[] current_state = new int[LFSR_LENGTH]; //int current_state[LFSR_LENGTH]
         for (int i = 0; i < LFSR_LENGTH; i++) {
             current_state[i] = 0;
@@ -219,6 +227,8 @@ public class Main {
             //eveal fitness values from max_sequence that will be created
             //by using out lfsr with t_connection_matrix
         }
+        List<Population> populationList = new ArrayList<>();
+
         for (int k = 0; k < NUMBER_OF_GENERATION; k++) {
         /*
         1. check every individual(chromosome) from population, get sequence length
@@ -256,6 +266,9 @@ public class Main {
                         register.remove(sequenceToDelete);
                     } else {
                         if(register.size() == 0) {
+                            if(individualChromosome.max_seq < countSeqLength) {
+                                individualChromosome.max_seq = countSeqLength;
+                            }
                             break;
                         } else {
                             current_state = register.get(0);
@@ -268,16 +281,40 @@ public class Main {
                     }
                     setChromosomeToMatrix(t_connection_matrix, individualChromosome.chromosome);
                     setNextState(t_connection_matrix, current_state, next_state);
-                    System.out.println("Calculation for chromosome:\n");
-                    printChromosome(individualChromosome.chromosome);
-                    printMatrix(t_connection_matrix);
-                    printState(current_state);
-                    printState(next_state);
+//                    System.out.println("Calculation for chromosome:\n");
+//                    printChromosome(individualChromosome.chromosome);
+//                    printMatrix(t_connection_matrix);
+//                    printState(current_state);
+//                    printState(next_state);
                     current_state = next_state;
                     countSeqLength++;
                 }
             }
             pop.calculateTotalLengthAndFitness();
+            Population endPopulation = new Population(pop.lfsr, pop.fitness, pop.totalSeqLength);
+            populationList.add(endPopulation);
+            pop = new Population();
+            pop.lfsr = endPopulation.nextGenerationChromosome();
+            System.out.println("Starting next generation!");
+
+
+        }
+
+        String fileName = "Populations"+ (int) (Math.random() * 100000) +".txt";
+        for(Population population : populationList) {
+            System.out.println(population);
+            write(population.toString(), fileName);
+        }
+    }
+
+    private static void write(final String s, final String fileName) throws IOException {
+        try(FileWriter fw = new FileWriter(fileName, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw))
+        {
+            out.println(s);
+        } catch (IOException e) {
+            System.out.println("SOMETHING WRONG WITH FILE!!");
         }
     }
 }
