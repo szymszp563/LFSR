@@ -23,7 +23,7 @@ public class Main {
 
     static List<int[]> recreateRegister(int size) {
         List<int[]> register = new ArrayList<>();
-        for(int i = 0; i<size; i++) {
+        for(int i = 1; i<size; i++) {
             String[] binaryString = new StringBuilder(Integer.toBinaryString(i)).reverse().toString().split("");
             int[] binary = new int[LFSR_LENGTH];
             for(int j = 0; j < binary.length; j++) {
